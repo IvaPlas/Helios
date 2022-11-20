@@ -1,0 +1,33 @@
+<items>
+{
+
+
+for $x in items/*
+return
+(
+
+<item>
+<Pricing>
+	<PriceWithFee>{$x/PriceWithFee/text()}</PriceWithFee>
+    <PriceWithoutFee>{$x/PriceWithoutFee/text()}</PriceWithoutFee>
+    <VAT>{$x/VAT/text()}</VAT>
+	<RecycleFee>{$x/RecycleFee/text()}</RecycleFee>
+	<CopyrightFee>{$x/CopyrightFee/text()}</CopyrightFee>
+	<Currency>{$x/Currency/text()}</Currency>
+</Pricing>
+<Storage>
+	<StoredQuantity>{$x/StoredQuantity/text()}</StoredQuantity>
+</Storage>
+<Product>
+	<Name>{$x/Name/text()}</Name>
+	<DealerCode>{$x/DealerCode/text()}</DealerCode>
+	<PartNumber>{$x/PartNumber/text()}</PartNumber>
+	<Ean>{$x/Ean/text()}</Ean>
+</Product>
+</item>
+)
+
+}
+
+</items>
+
