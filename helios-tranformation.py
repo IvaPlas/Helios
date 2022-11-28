@@ -1,5 +1,6 @@
 import pandas as pd
 import xml.etree.cElementTree as ET
+import numpy as np
 # from xml.dom import minidom  # for prettify
 
 
@@ -14,6 +15,27 @@ print('~~~~~~~~~~~~~~~~~~~~~~~~~')
 helios_data = pd.read_excel(helios_file, dtype={'Čárový kód': object})  # to keep leading zeros in EAN
 print(helios_data.head(11))
 
+
+def handle_nan(value, round_=False):
+    if isinstance(value, (int, float)):  # int / float
+        if np.isnan(value):
+            return ''
+        else:
+            if round_ is True:
+                return str(round(value))
+            else:
+                if '.' in str(value):
+                    if value == 0 or str(value) == "0.0":
+                        return "0"
+                    else:
+                        return str(value).replace('.', ',')
+                else:
+                    return str(value)
+    else:  # value is string
+        if int(value) == 0:
+            return "0"
+        else:
+            return str(value)
 
 def get_product_xml(row, root, type_):
 
@@ -34,7 +56,6 @@ def get_product_xml(row, root, type_):
         DealerCode = row['Registrační číslo']
         PartNumber = row['PartNumber']
         Ean = row['Čárový kód']
-
 
         item = ET.SubElement(root, "item")
         pricing = ET.SubElement(item, "Pricing")
@@ -65,46 +86,33 @@ def get_product_xml(row, root, type_):
         URL = row['URL']
         DESCRIPTION = row['DESCRIPTION']
         CURRENCY = row['Currency']
-        AUTHOR_FEE = str(row['CopyrightFee'])
-        if '.' in AUTHOR_FEE:
-            AUTHOR_FEE = AUTHOR_FEE.replace('.', ',')
-        RECYCLE_FEE = str(row['JC hist. recykl. přísp.'])
-        if '.' in RECYCLE_FEE:
-            RECYCLE_FEE = RECYCLE_FEE.replace('.', ',')
-        WEIGHT_BRUTTO = str(row['Hmotnost'])
-        if '.' in WEIGHT_BRUTTO:
-            WEIGHT_BRUTTO = WEIGHT_BRUTTO.replace('.', ',')
-        SIZE_X_NETTO = str(row['Šířka'])
-        if '.' in  SIZE_X_NETTO:
-            SIZE_X_NETTO =  SIZE_X_NETTO.replace('.', ',')
-        SIZE_Y_NETTO = str(row['Výška'])
-        if '.' in SIZE_Y_NETTO:
-            SIZE_Y_NETTO = SIZE_Y_NETTO.replace('.', ',')
-        SIZE_Z_NETTO = str(row['Hloubka'])
-        if '.' in SIZE_Z_NETTO:
-            SIZE_Z_NETTO = SIZE_Z_NETTO.replace('.', ',')
+        AUTHOR_FEE = row['CopyrightFee']
+        RECYCLE_FEE = row['JC hist. recykl. přísp.']
+        WEIGHT_BRUTTO = row['Hmotnost']
+        SIZE_X_NETTO = row['Šířka']
+        SIZE_Y_NETTO = row['Výška']
+        SIZE_Z_NETTO = row['Hloubka']
         WARRANTY = row['WARRANTY']
-
 
         shopitem = ET.SubElement(root, "Shopitem")
         ET.SubElement(shopitem, "CODE").text = str(CODE)
         ET.SubElement(shopitem, "ESHOP_CODE").text = str(ESHOP_CODE)
         ET.SubElement(shopitem, "Name").text = str(Name)
         ET.SubElement(shopitem, "Ean").text = str(Ean)
-        ET.SubElement(shopitem, "Price").text = str(Price)
+        ET.SubElement(shopitem, "Price").text = handle_nan(Price, round_=True)
         ET.SubElement(shopitem, "Quantity").text = str(Quantity)
-        ET.SubElement(shopitem, "MANUFACTURER").text = str(MANUFACTURER)
-        ET.SubElement(shopitem, "IMAGE").text = str(IMAGE)
-        ET.SubElement(shopitem, "URL").text = str(URL)
-        ET.SubElement(shopitem, "DESCRIPTION").text = str(DESCRIPTION)
+        ET.SubElement(shopitem, "MANUFACTURER").text = handle_nan(MANUFACTURER)
+        ET.SubElement(shopitem, "IMAGE").text = handle_nan(IMAGE)
+        ET.SubElement(shopitem, "URL").text = handle_nan(URL)
+        ET.SubElement(shopitem, "DESCRIPTION").text = handle_nan(DESCRIPTION)
         ET.SubElement(shopitem, "CURRENCY").text = str(CURRENCY)
-        ET.SubElement(shopitem, "AUTHOR_FEE").text = AUTHOR_FEE
-        ET.SubElement(shopitem, "RECYCLE_FEE").text = RECYCLE_FEE
-        ET.SubElement(shopitem, "WEIGHT_BRUTTO").text = WEIGHT_BRUTTO
-        ET.SubElement(shopitem, "SIZE_X_NETTO").text = SIZE_X_NETTO
-        ET.SubElement(shopitem, "SIZE_Y_NETTO").text = SIZE_Y_NETTO
-        ET.SubElement(shopitem, "SIZE_Z_NETTO").text = SIZE_Z_NETTO
-        ET.SubElement(shopitem, "WARRANTY").text = str(WARRANTY)
+        ET.SubElement(shopitem, "AUTHOR_FEE").text = handle_nan(AUTHOR_FEE)
+        ET.SubElement(shopitem, "RECYCLE_FEE").text = handle_nan(RECYCLE_FEE)
+        ET.SubElement(shopitem, "WEIGHT_BRUTTO").text = handle_nan(WEIGHT_BRUTTO)
+        ET.SubElement(shopitem, "SIZE_X_NETTO").text = handle_nan(SIZE_X_NETTO)
+        ET.SubElement(shopitem, "SIZE_Y_NETTO").text = handle_nan(SIZE_Y_NETTO)
+        ET.SubElement(shopitem, "SIZE_Z_NETTO").text = handle_nan(SIZE_Z_NETTO)
+        ET.SubElement(shopitem, "WARRANTY").text = handle_nan(WARRANTY)
 
 
     return root
@@ -121,3 +129,16 @@ print(root_czc)
 ET.ElementTree(root_alza).write(alza_xml_file)
 ET.ElementTree(root_czc).write(czc_xml_file)
 
+
+# import ftplib
+# HOSTNAME = "s5.eshop-rychle.cz"
+# USERNAME = "12829.s5.eshop-rychle.cz"
+# PASSWORD = "SuPTyYo751*"
+#
+# ftp_server = ftplib.FTP(HOSTNAME, USERNAME, PASSWORD)
+# # ftp_server.encoding = "utf-8"
+# filename = 'czc_export.xml'
+# with open(alza_xml_file, "rb") as file:
+#     ftp_server.storbinary(f"STOR {filename}", file)
+# ftp_server.dir()
+# ftp_server.quit()
