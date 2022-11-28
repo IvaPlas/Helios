@@ -114,8 +114,8 @@ def get_product_xml(row, root, type_):
         ET.SubElement(shopitem, "SIZE_Z_NETTO").text = handle_nan(SIZE_Z_NETTO)
         ET.SubElement(shopitem, "WARRANTY").text = handle_nan(WARRANTY)
 
-
     return root
+
 
 # create full alza_xml.xml
 root_alza = ET.Element("items")
@@ -124,21 +124,27 @@ root_czc = ET.Element("shop")
 for i, row in helios_data.iterrows():
     root_czc = get_product_xml(row, root_czc, type_='czc')
     root_alza = get_product_xml(row, root_alza, type_='alza')
-print(root_czc)
+
 # export xmls
 ET.ElementTree(root_alza).write(alza_xml_file)
 ET.ElementTree(root_czc).write(czc_xml_file)
 
 
-# import ftplib
-# HOSTNAME = "s5.eshop-rychle.cz"
-# USERNAME = "12829.s5.eshop-rychle.cz"
-# PASSWORD = "SuPTyYo751*"
-#
-# ftp_server = ftplib.FTP(HOSTNAME, USERNAME, PASSWORD)
-# # ftp_server.encoding = "utf-8"
-# filename = 'czc_export.xml'
-# with open(alza_xml_file, "rb") as file:
-#     ftp_server.storbinary(f"STOR {filename}", file)
-# ftp_server.dir()
-# ftp_server.quit()
+import ftplib
+HOSTNAME = "s5.eshop-rychle.cz"
+USERNAME = "12829.s5.eshop-rychle.cz"
+PASSWORD = "SuPTyYo751*"
+
+ftp_server = ftplib.FTP(HOSTNAME, USERNAME, PASSWORD)
+# ftp_server.encoding = "utf-8"
+
+xml_files = [alza_xml_file, czc_xml_file]
+# filenames = ['alza_export.xml', 'czc_export.xml']
+for xml_file in xml_files:
+    filename = xml_file.split('/')[-1]
+    print('saving file ...', filename)
+    with open(xml_file, "rb") as file:
+        ftp_server.storbinary(f"STOR {filename}", file)
+
+ftp_server.dir()
+ftp_server.quit()
