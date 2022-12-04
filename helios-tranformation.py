@@ -24,13 +24,13 @@ def handle_nan(value, round_=False):
             return ''
         else:
             if round_ is True:
-                return str(round(value))
+                return str(round(value, round_))
             else:
                 if '.' in str(value):
                     if value == 0 or str(value) == "0.0":
                         return "0"
                     else:
-                        return str(value).replace('.', ',')
+                        return str(round(value, 2)).replace('.', ',')
                 else:
                     return str(value)
     else:  # value is string
@@ -39,8 +39,8 @@ def handle_nan(value, round_=False):
         else:
             return str(value)
 
-def get_product_xml(row, root, type_):
 
+def get_product_xml(row, root, type_):
 
     if type_ == 'alza':
 
@@ -135,7 +135,6 @@ def get_product_xml(row, root, type_):
         PRICE_NAKUP = row['Prodejní cena']
         PRICE_DOPORUCENA = row['Cena v HM']
 
-
         ROW = ET.SubElement(root, "ROW")
         ET.SubElement(ROW, "ITEM_ID").text = str(ITEM_ID)
         ET.SubElement(ROW, "EAN").text = str(EAN)
@@ -144,7 +143,7 @@ def get_product_xml(row, root, type_):
         ET.SubElement(ROW, "CATEGORYTEXT").text = str(CATEGORYTEXT)
         ET.SubElement(ROW, "DESCRIPTION").text = str(DESCRIPTION)
         ET.SubElement(ROW, "STOCK").text = str(STOCK)
-        ET.SubElement(ROW, "WEIGHT").text = str(WEIGHT)
+        ET.SubElement(ROW, "WEIGHT").text = handle_nan(WEIGHT)
         ET.SubElement(ROW, "IMGURL").text = str(IMGURL)
         ET.SubElement(ROW, "IMGURL1").text = str(IMGURL1)
         ET.SubElement(ROW, "IMGURL2").text = str(IMGURL2)
@@ -152,9 +151,8 @@ def get_product_xml(row, root, type_):
         ET.SubElement(ROW, "IMGURL4").text = str(IMGURL4)
         ET.SubElement(ROW, "IMGURL5").text = str(IMGURL5)
         ET.SubElement(ROW, "IMGURL6").text = str(IMGURL6)
-
-        ET.SubElement(ROW, "PRICE_NAKUP").text = str(PRICE_NAKUP)
-        ET.SubElement(ROW, "PRICE_DOPORUCENA").text = str(PRICE_DOPORUCENA)
+        ET.SubElement(ROW, "PRICE_NAKUP").text = handle_nan(PRICE_NAKUP, round_=False)
+        ET.SubElement(ROW, "PRICE_DOPORUCENA").text = handle_nan(PRICE_DOPORUCENA, round_=False)
 
     return root
 
@@ -162,7 +160,7 @@ def get_product_xml(row, root, type_):
 # create full alza_xml.xml
 root_alza = ET.Element("items")
 root_czc = ET.Element("shop")
-root_onlineshop = ET.Element("ROW")
+root_onlineshop = ET.Element("ROOT")
 
 for i, row in helios_data.iterrows():
     root_czc = get_product_xml(row, root_czc, type_='czc')
