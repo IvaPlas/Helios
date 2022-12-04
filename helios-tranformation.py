@@ -7,6 +7,8 @@ import numpy as np
 helios_file = 'data/excel/sklad_helios.xlsx'
 alza_xml_file = 'data/exports/alza_export.xml'
 czc_xml_file = 'data/exports/czc_export.xml'
+onlineshop_xml_file = 'data/exports/onlineshop_export.xml'
+
 
 print('~~~~~~~~~~~~~~~~~~~~~~~~~')
 print('~~~ HELIOS XML EXPORT ~~~')
@@ -40,7 +42,6 @@ def handle_nan(value, round_=False):
 def get_product_xml(row, root, type_):
 
 
-
     if type_ == 'alza':
 
         PriceWithFee = row['Alternativní cena']
@@ -59,8 +60,8 @@ def get_product_xml(row, root, type_):
 
         item = ET.SubElement(root, "item")
         pricing = ET.SubElement(item, "Pricing")
-        ET.SubElement(pricing, "PriceWithFee").text = str(round(PriceWithFee))
-        ET.SubElement(pricing, "PriceWithoutFee").text = str(round(PriceWithoutFee))
+        ET.SubElement(pricing, "PriceWithFee").text = handle_nan(PriceWithFee, round_=False)
+        ET.SubElement(pricing, "PriceWithoutFee").text = handle_nan(PriceWithoutFee, round_=False)
         ET.SubElement(pricing, "VAT").text = str(VAT)
         ET.SubElement(pricing, "RecycleFee").text = RecycleFee
         ET.SubElement(pricing, "CopyrightFee").text = str(CopyrightFee)
@@ -114,20 +115,64 @@ def get_product_xml(row, root, type_):
         ET.SubElement(shopitem, "SIZE_Z_NETTO").text = handle_nan(SIZE_Z_NETTO)
         ET.SubElement(shopitem, "WARRANTY").text = handle_nan(WARRANTY)
 
+    elif type_ == 'onlineshop':
+
+        ITEM_ID = row['Registrační číslo']
+        EAN = row['Čárový kód']
+        PRODUCT = row['Název 1']
+        MANUFACTURER = row['MANUFACTURER']
+        CATEGORYTEXT = row['CATEGORYTEXT']
+        DESCRIPTION = row['DESCRIPTION']
+        STOCK = row['Množství skladem']
+        WEIGHT = row['Hmotnost']
+        IMGURL = row['IMAGE']
+        IMGURL1 = row['IMAGE1']
+        IMGURL2 = row['IMAGE2']
+        IMGURL3 = row['IMAGE3']
+        IMGURL4 = row['IMAGE4']
+        IMGURL5 = row['IMAGE5']
+        IMGURL6 = row['IMAGE6']
+        PRICE_NAKUP = row['Prodejní cena']
+        PRICE_DOPORUCENA = row['Cena v HM']
+
+
+        ROW = ET.SubElement(root, "ROW")
+        ET.SubElement(ROW, "ITEM_ID").text = str(ITEM_ID)
+        ET.SubElement(ROW, "EAN").text = str(EAN)
+        ET.SubElement(ROW, "PRODUCT").text = str(PRODUCT)
+        ET.SubElement(ROW, "MANUFACTURER").text = str(MANUFACTURER)
+        ET.SubElement(ROW, "CATEGORYTEXT").text = str(CATEGORYTEXT)
+        ET.SubElement(ROW, "DESCRIPTION").text = str(DESCRIPTION)
+        ET.SubElement(ROW, "STOCK").text = str(STOCK)
+        ET.SubElement(ROW, "WEIGHT").text = str(WEIGHT)
+        ET.SubElement(ROW, "IMGURL").text = str(IMGURL)
+        ET.SubElement(ROW, "IMGURL1").text = str(IMGURL1)
+        ET.SubElement(ROW, "IMGURL2").text = str(IMGURL2)
+        ET.SubElement(ROW, "IMGURL3").text = str(IMGURL3)
+        ET.SubElement(ROW, "IMGURL4").text = str(IMGURL4)
+        ET.SubElement(ROW, "IMGURL5").text = str(IMGURL5)
+        ET.SubElement(ROW, "IMGURL6").text = str(IMGURL6)
+
+        ET.SubElement(ROW, "PRICE_NAKUP").text = str(PRICE_NAKUP)
+        ET.SubElement(ROW, "PRICE_DOPORUCENA").text = str(PRICE_DOPORUCENA)
+
     return root
 
 
 # create full alza_xml.xml
 root_alza = ET.Element("items")
 root_czc = ET.Element("shop")
+root_onlineshop = ET.Element("ROW")
 
 for i, row in helios_data.iterrows():
     root_czc = get_product_xml(row, root_czc, type_='czc')
     root_alza = get_product_xml(row, root_alza, type_='alza')
+    root_onlineshop = get_product_xml(row, root_onlineshop, type_='onlineshop')
 
 # export xmls
 ET.ElementTree(root_alza).write(alza_xml_file)
 ET.ElementTree(root_czc).write(czc_xml_file)
+ET.ElementTree(root_onlineshop).write(onlineshop_xml_file)
 
 
 import ftplib
@@ -138,7 +183,7 @@ PASSWORD = "SuPTyYo751*"
 ftp_server = ftplib.FTP(HOSTNAME, USERNAME, PASSWORD)
 # ftp_server.encoding = "utf-8"
 
-xml_files = [alza_xml_file, czc_xml_file]
+xml_files = [alza_xml_file, czc_xml_file, onlineshop_xml_file]
 # filenames = ['alza_export.xml', 'czc_export.xml']
 for xml_file in xml_files:
     filename = xml_file.split('/')[-1]
